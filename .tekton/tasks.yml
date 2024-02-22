@@ -1,0 +1,57 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: nose
+spec:
+  description: "A task to run Python nosetests."
+  workspaces:
+    - name: source
+  params:
+    - name: args
+      description: "Arguments to pass to nose"
+      type: string
+      default: "-v"
+  steps:
+    - name: nosetests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+        python -m pip install --upgrade pip wheel
+        pip install -r requirements.txt
+        nosetests $(params.args)
+
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: cleanup
+spec:
+  description: "This task will clean up a workspace by deleting all the files."
+  workspaces:
+    - name: source
+  steps:
+    - name: remove
+      image: alpine:3
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        runAsNonRoot: false
+        runAsUser: 0
+      script: |
+        #!/usr/bin/env sh
+        set -eu
+        echo "Removing all files from $(workspaces.source.path) ..."
+        # Delete any existing contents of the directory if it exists.
+        #
+        # We don't just "rm -rf $(workspaces.source.path)" because $(workspaces.source.path) might be "/"
+        # or the root of a mounted volume.
+        if [ -d "$(workspaces.source.path)" ] ; then
+          # Delete non-hidden files and directories
+          rm -rf "$(workspaces.source.path:?)"/*
+          # Delete files and directories starting with . but excluding ..
+          rm -rf "$(workspaces.source.path)"/.[!.]*
+          # Delete files and directories starting with .. plus any other character
+          rm -rf "$(workspaces.source.path)"/..?*
+        fi
+        
