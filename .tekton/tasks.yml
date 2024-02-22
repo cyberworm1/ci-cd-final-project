@@ -3,7 +3,7 @@ kind: Task
 metadata:
   name: cleanup
 spec:
-  description: "This task will clean up a workspace by deleting all the files."
+  description: This task will clean up a workspace by deleting all the files.
   workspaces:
     - name: source
   steps:
@@ -40,12 +40,12 @@ kind: Task
 metadata:
   name: nose
 spec:
-  description: "A task to run Python nosetests."
+  description: A task to run Python nosetests
   workspaces:
     - name: source
   params:
     - name: args
-      description: "Arguments to pass to nose"
+      description: Arguments to pass to nose
       type: string
       default: "-v"
   steps:
